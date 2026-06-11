@@ -47,11 +47,10 @@
 
         /* Markdown Styling for AI Output */
         .ai-output {
-            /* Use a clean, readable font instead of Syne for long text */
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Poppins", Roboto, sans-serif;
             font-size: 14px;
             line-height: 1.6;
-            color: #d1d5db; /* Softer text color for less eye strain */
+            color: #d1d5db;
         }
 
         .ai-output h1, .ai-output h2, .ai-output h3, .ai-output h4 {
@@ -59,7 +58,7 @@
             margin-top: 1em;
             margin-bottom: 0.5em;
             font-weight: 600;
-            font-family: 'Poppins', sans-serif; /* Keep headers futuristic */
+            font-family: 'Poppins', sans-serif;
             letter-spacing: 0.5px;
         }
 
@@ -74,7 +73,7 @@
             font-weight: 600; 
         }
 
-        /* Clean Table Styling */
+        /* Table Styling */
         .ai-output table {
             width: 100%;
             border-collapse: collapse;
@@ -92,7 +91,7 @@
         }
 
         .ai-output th {
-            background: rgba(124, 255, 212, 0.05); /* Slight tint of your accent color */
+            background: rgba(124, 255, 212, 0.05);
             color: var(--accent);
             font-weight: 600;
         }
@@ -107,10 +106,9 @@
             margin-bottom: 1.2em;
         }
 
-        /* Inline code styling vs Block code styling */
         .ai-output code {
             font-family: 'JetBrains Mono', monospace;
-            color: #ffd166; /* Yellow for inline code */
+            color: #ffd166;
             font-size: 12.5px;
             background: rgba(255, 209, 102, 0.1);
             padding: 2px 5px;
@@ -118,7 +116,7 @@
         }
 
         .ai-output pre code {
-            color: #a8d8a8; /* Green for block code */
+            color: #a8d8a8;
             background: transparent;
             padding: 0;
         }
@@ -209,10 +207,10 @@
             
             // Format output using marked.js
             let formattedText = data.response
-                .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>') // Code blocks
-                .replace(/`([^`]+)`/g, '<code>$1</code>')                           // Inline code
-                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')                 // Bold
-                .replace(/\*([^*]+)\*/g, '<em>$1</em>')                             // Italics
+                .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>')
                 .replace(/^### (.+)$/gm, '<h3 style="color:var(--accent);margin:14px 0 8px;font-size:14px;">$1</h3>')
                 .replace(/^- (.+)$/gm, '<li style="margin:4px 0; margin-left: 20px;">$1</li>')
                 .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
@@ -226,7 +224,7 @@
     // Unified Local Execution Function
     async function runCode() {
         const terminal = document.getElementById('terminal');
-        const code = editor.getValue().trim(); // Get code from Monaco
+        const code = editor.getValue().trim();
         const lang = document.getElementById('langSelect').value;
 
         if (!code) {
