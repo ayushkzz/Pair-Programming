@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Pair Programmer Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Syne:wght@600;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #0d0f14;
+            --surface: #13151c;
+            --accent: #7cffd4;
+            --border: #252836;
+            --text: #e2e8f0;
+            --accent2: #ff6b6b;
+        }
+        
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; height: 100vh; display: flex; flex-direction: column; }
+        .header { padding: 15px 20px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .main { display: grid; grid-template-columns: 1fr 1fr; flex: 1; overflow: hidden; }
+        .pane { display: flex; flex-direction: column; border-right: 1px solid var(--border); overflow: hidden; }
+        
+        .controls { 
+            padding: 10px; 
+            background: var(--surface); 
+            display: flex; 
+            gap: 8px; 
+            border-bottom: 1px solid var(--border); 
+            flex-wrap: wrap;
+        }
+        
+        #editorContainer { flex: 1; min-height: 0; }
+        #terminal { height: 180px; background: #000; padding: 10px; font-family: 'JetBrains Mono', monospace; color: #adff2f; overflow-y: auto; border-top: 2px solid var(--border); font-size: 13px; }
+        .ai-output { flex: 1; padding: 20px; overflow-y: auto; line-height: 1.6; background: #1a1d27; }
+        
+        button { cursor: pointer; padding: 8px 12px; border-radius: 5px; border: none; font-weight: bold; transition: 0.2s; font-family: 'Poppins', sans-serif; }
+        .btn-run { background: #ffd166; color: #000; }
+        .btn-ai { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-ai:hover { background: var(--border); color: var(--accent); border-color: var(--accent); }
+        button:hover { transform: translateY(-1px); }
+
+        /* Markdown Styling for AI Output */
+        .ai-output {
+            /* Use a clean, readable font instead of Syne for long text */
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Poppins", Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #d1d5db; /* Softer text color for less eye strain */
+        }
+
+        .ai-output h1, .ai-output h2, .ai-output h3, .ai-output h4 {
+            color: var(--accent);
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif; /* Keep headers futuristic */
+            letter-spacing: 0.5px;
+        }
+
+        .ai-output h3 { font-size: 1.1em; text-transform: uppercase; }
+        
+        .ai-output p { margin-bottom: 1em; }
+        .ai-output ul, .ai-output ol { margin-bottom: 1em; padding-left: 20px; }
+        .ai-output li { margin-bottom: 6px; }
+        
+        .ai-output strong { 
+            color: #ffffff; 
+            font-weight: 600; 
+        }
+
+        /* Clean Table Styling */
+        .ai-output table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .ai-output th, .ai-output td {
+            border-bottom: 1px solid var(--border);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .ai-output th {
+            background: rgba(124, 255, 212, 0.05); /* Slight tint of your accent color */
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Code Block Styling */
+        .ai-output pre {
+            background: #000;
+            padding: 14px;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            margin-bottom: 1.2em;
+        }
+
+        /* Inline code styling vs Block code styling */
+        .ai-output code {
+            font-family: 'JetBrains Mono', monospace;
+            color: #ffd166; /* Yellow for inline code */
+            font-size: 12.5px;
+            background: rgba(255, 209, 102, 0.1);
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        .ai-output pre code {
+            color: #a8d8a8; /* Green for block code */
+            background: transparent;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div style="font-weight: 800; display: flex; align-items: center; gap: 10px;">
+        <div style="width:10px; height:10px; background:var(--accent); border-radius:50%; box-shadow:0 0 10px var(--accent);"></div>
+        AI PAIR PROGRAMMER
+    </div>
+    <select id="langSelect" style="background: #1a1d27; color: white; border: 1px solid var(--border); padding: 6px 10px; border-radius: 5px; outline: none; font-family: 'JetBrains Mono', monospace;">
+        <option value="python">Python</option>
+        <option value="c++">C++</option>
+    </select>
+</div>
+
+<div class="main">
+    <div class="pane">
+        <div class="controls">
+            <button class="btn-run" onclick="runCode()">▶ Run Code</button>
+            <button class="btn-ai" onclick="analyze('review')">🔍 Review</button>
+            <button class="btn-ai" onclick="analyze('explain')">💡 Explain</button>
+            <button class="btn-ai" onclick="analyze('refactor')">✨ Refactor</button>
+            <button class="btn-ai" onclick="analyze('bugs')">🐛 Find Bugs</button>
+            <button class="btn-ai" onclick="analyze('tests')">🧪 Tests</button>
+            <button class="btn-ai" onclick="analyze('optimize')">⚡ Optimize</button>
+        </div>
+        <div id="editorContainer"></div>
+        <div id="terminal">> Console Output...</div>
+    </div>
+    <div class="ai-output" id="aiOutput">
+        <h3>AI Feedback</h3>
+        <p style="color: var(--muted);">Write some code and select a mode above to get started.</p>
+    </div>
+</div>
+
+<script>
+    let editor;
+
+    // Initialize Monaco Editor
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+        editor = monaco.editor.create(document.getElementById('editorContainer'), {
+            value: "print('Hello World')",
+            language: 'python',
+            theme: 'vs-dark',
+            automaticLayout: true,
+            fontSize: 14
+        });
+
+        // Update Monaco language when dropdown changes
+        document.getElementById('langSelect').addEventListener('change', function(e) {
+            let lang = e.target.value.toLowerCase();
+            if (lang === 'c++') lang = 'cpp';
+            monaco.editor.setModelLanguage(editor.getModel(), lang);
+        });
+    });
+
+    // Unified AI Analysis Function
+    async function analyze(mode) {
+        const aiOutput = document.getElementById('aiOutput');
+        const code = editor.getValue().trim(); // Get code from Monaco
+        const lang = document.getElementById('langSelect').value;
+
+        if (!code) {
+            aiOutput.innerHTML = `<span style="color:var(--accent2)">Please write some code first!</span>`;
+            return;
+        }
+
+        aiOutput.innerHTML = `<em>AI is analyzing (${mode})...</em>`;
+
+        try {
+            const res = await fetch('http://127.0.0.1:8000/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: code,
+                    language: lang,
+                    mode: mode
+                })
+            });
+
+            if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+            
+            const data = await res.json();
+            
+            // Format output using marked.js
+            let formattedText = data.response
+                .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>') // Code blocks
+                .replace(/`([^`]+)`/g, '<code>$1</code>')                           // Inline code
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')                 // Bold
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>')                             // Italics
+                .replace(/^### (.+)$/gm, '<h3 style="color:var(--accent);margin:14px 0 8px;font-size:14px;">$1</h3>')
+                .replace(/^- (.+)$/gm, '<li style="margin:4px 0; margin-left: 20px;">$1</li>')
+                .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+
+            aiOutput.innerHTML = `<h3>${mode.toUpperCase()} ANALYSIS</h3><br>` + formattedText;
+        } catch (e) {
+            aiOutput.innerHTML = `<span style="color:var(--accent2)">Error connecting to backend! Ensure main.py is running on port 8000.<br><br>Details: ${e.message}</span>`;
+        }
+    }
+
+    // Unified Local Execution Function
+    async function runCode() {
+        const terminal = document.getElementById('terminal');
+        const code = editor.getValue().trim(); // Get code from Monaco
+        const lang = document.getElementById('langSelect').value;
+
+        if (!code) {
+            terminal.innerHTML = "> Please write some code first!";
+            return;
+        }
+
+        terminal.innerHTML = "<em>> Executing locally...</em>";
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: code,
+                    language: lang
+                })
+            });
+            
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+            const data = await response.json();
+            terminal.innerHTML = `<pre>${data.output || "Execution completed with no output."}</pre>`;
+        } catch (err) {
+            terminal.innerHTML = `<span style="color:var(--accent2)">> Backend Error: Ensure main.py is running.<br>> Details: ${err.message}</span>`;
+        }
+    }
+</script>
+</body>
+</html>
