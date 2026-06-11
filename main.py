@@ -9,7 +9,6 @@ import uvicorn
 
 app = FastAPI()
 
-# Enable CORS so your frontend can communicate with this backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,9 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# CRITICAL: Replace this string with your actual Gemini API key
-# If this is invalid or missing, you will get an HTTP 500 Error
-genai.configure(api_key="AIzaSyAZygnX91XXaxmxDz7THJyIp-jwJhvRbAk")
+genai.configure(api_key="")
 
 class CodeRequest(BaseModel):
     code: str
@@ -31,7 +28,7 @@ async def analyze_code(request: CodeRequest):
     try:
         model = genai.GenerativeModel('gemini-3-flash-preview')
         
-        # Expanded prompt dictionary to match all frontend buttons
+       
         prompts = {
             "review": f"Review this {request.language} code for quality and best practices. Point out readability and maintainability issues.",
             "explain": f"Explain this {request.language} code step-by-step. What does each part do?",
@@ -48,7 +45,6 @@ async def analyze_code(request: CodeRequest):
         return {"response": response.text}
         
     except Exception as e:
-        # This will print the exact cause of the 500 error to your terminal
         print(f"\n🔥 BACKEND ERROR in /analyze: {str(e)}\n")
         raise HTTPException(status_code=500, detail=str(e))
 
